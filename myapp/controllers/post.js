@@ -26,8 +26,6 @@ const getPostById = async(req, res, next) => {
 }
 
 const addNewPost = async(req, res, next) => {
-    console.log(req.body)
-
     const post = new Post({
         message: req.body.message,
         sender: req.body.sender
@@ -44,4 +42,17 @@ const addNewPost = async(req, res, next) => {
     }    
 }
 
-module.exports = {getAllPosts, addNewPost, getPostById}
+const updatePost = async(req, res, next) => {
+    try{
+        const filter = { _id: req.params.id };
+        const update = { message: req.body.message };
+
+        let post = await Post.findOneAndUpdate(filter, update, {new: true});
+        res.status(200).send(post)
+    }
+    catch(err){
+        res.status(400).send({'error':"failed to get posts from db"})
+    }
+}
+
+module.exports = {getAllPosts, addNewPost, getPostById, updatePost}

@@ -25,3 +25,12 @@ Content-Type: application/json
 }
 
 ###
+
+PUT http://localhost:3000/post/636b54b915da28204984fedc
+Content-Type: application/json
+
+{
+    "message": "This is my new message"
+}
+
+###
