@@ -12,10 +12,12 @@
   "author": "Mikhail Diyachkov",
   "license": "ISC",
   "dependencies": {
+    "@types/jest": "^29.2.2",
     "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "mongoose": "^6.7.0"
+    "mongoose": "^6.7.2",
+    "ts-jest": "^29.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.1",

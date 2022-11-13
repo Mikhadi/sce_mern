@@ -1,6 +1,6 @@
-const Post = require('../models/post_models')
+import Post from '../models/post_models'
 
-const getAllPosts = async(req, res, next) => {
+const getAllPosts = async(req, res) => {
     try{
         let posts = {}
         if (req.query.sender == null){
@@ -15,7 +15,7 @@ const getAllPosts = async(req, res, next) => {
     }
 }
 
-const getPostById = async(req, res, next) => {
+const getPostById = async(req, res) => {
     try{
         const posts = await Post.findById(req.params.id)
         res.status(200).send(posts)
@@ -25,14 +25,14 @@ const getPostById = async(req, res, next) => {
     }
 }
 
-const addNewPost = async(req, res, next) => {
+const addNewPost = async(req, res) => {
     const post = new Post({
         message: req.body.message,
         sender: req.body.sender
     })
     
     try{
-        newPost = await post.save()
+        const newPost = await post.save()
         console.log('Saved post in DB')
         res.status(200).send(newPost)
     }
@@ -42,12 +42,12 @@ const addNewPost = async(req, res, next) => {
     }    
 }
 
-const updatePost = async(req, res, next) => {
+const updatePost = async(req, res) => {
     try{
         const filter = { _id: req.params.id };
         const update = { message: req.body.message };
 
-        let post = await Post.findOneAndUpdate(filter, update, {new: true});
+        const post = await Post.findOneAndUpdate(filter, update, {new: true});
         res.status(200).send(post)
     }
     catch(err){
@@ -55,4 +55,4 @@ const updatePost = async(req, res, next) => {
     }
 }
 
-module.exports = {getAllPosts, addNewPost, getPostById, updatePost}
+export = {getAllPosts, addNewPost, getPostById, updatePost}
