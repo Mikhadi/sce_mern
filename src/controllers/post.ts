@@ -53,7 +53,7 @@ const updatePost = async(req: Request, res: Response) => {
         res.status(200).send(post)
     }
     catch(err){
-        res.status(400).send({'error':"failed to get posts from db"})
+        res.status(400).send({'error':"failed to update post in db"})
     }
 }
 
