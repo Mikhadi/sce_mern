@@ -7,7 +7,7 @@
     "start": "tsc && node dist/app.js",
     "devstart": "nodemon ./src/app.ts",
     "lint": "eslint . --ext .ts",
-    "test": "tsc && jest --detectOpenHandles --forceExit"
+    "test": "tsc && jest --detectOpenHandles --forceExit ./dist/tests"
   },
   "author": "Mikhail Diyachkov",
   "license": "ISC",
