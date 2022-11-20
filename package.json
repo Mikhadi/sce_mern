@@ -7,15 +7,17 @@
     "start": "tsc && node dist/app.js",
     "devstart": "nodemon ./src/app.ts",
     "lint": "eslint . --ext .ts",
-    "test": "tsc && jest --detectOpenHandles --forceExit ./dist/tests"
+    "test": "tsc && jest --detectOpenHandles --forceExit ./dist/src/tests"
   },
   "author": "Mikhail Diyachkov",
   "license": "ISC",
   "dependencies": {
     "@types/jest": "^29.2.2",
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.7.2",
     "ts-jest": "^29.0.3"
   },
