@@ -16,21 +16,22 @@ GET http://localhost:3000/post/635e7e7b45c51a54945675be
 
 ###
 
-POST  http://localhost:3000/post
-Content-Type: application/json 
+POST  http://localhost:3000/auth/register
+Content-Type: application/json
 
 {
-    "message":"This is my new message",
-    "sender":"123456"
+    "email": "user1@gmail.com",
+    "password": "12345"
 }
 
 ###
 
-PUT http://localhost:3000/post/636b54b915da28204984fedc
+POST  http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-    "message": "This is my new message"
+    "email": "user1@gmail.com",
+    "password": "12345"
 }
 
 ###

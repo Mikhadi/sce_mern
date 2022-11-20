@@ -16,8 +16,11 @@ db.once('open', ()=>{console.log('Conncected to MongoDB')})
 app.use(express.static('public'))
 
 
-import postRouter from './routes/post_route.js'
+import postRouter from './routes/post_route'
 
 app.use('/post', postRouter)
+
+import authRouter from './routes/auth_route'
+app.use('/auth', authRouter)
 
 export = app

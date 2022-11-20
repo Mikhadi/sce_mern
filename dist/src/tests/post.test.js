@@ -23,7 +23,7 @@ const newPostMessage2 = "This is second test post message";
 const newPostSender2 = "999002";
 let newPostId2 = "";
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield post_models_1.default.remove();
+    yield post_models_1.default.deleteMany();
 }));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
     yield mongoose_1.default.connection.close();

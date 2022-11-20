@@ -12,7 +12,7 @@ const newPostSender2 = "999002"
 let newPostId2 = ""
 
 beforeAll(async() => {
-    await Post.remove()
+    await Post.deleteMany()
 })
 
 afterAll(async () => {
