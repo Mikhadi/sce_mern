@@ -23,16 +23,16 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const password = req.body.password;
     if (email == null || password == null) {
-        sendError(res, 'Please provide valid email and password');
+        return sendError(res, 'Please provide valid email and password');
     }
     try {
         const user = yield user_model_1.default.findOne({ 'email': email });
         if (user != null) {
-            sendError(res, 'User already registered');
+            return sendError(res, 'User already registered');
         }
     }
     catch (err) {
-        sendError(res, "Failed checking user");
+        return sendError(res, "Failed checking user");
     }
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
@@ -45,46 +45,117 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(200).send(newUser);
     }
     catch (err) {
-        sendError(res, "Failed registration");
+        return sendError(res, "Failed registration");
     }
 });
+function generateTokens(userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => {
+            return userId;
+        });
+        // const accessToken = await jwt.sign(
+        //     {'id': userId},
+        //     process.env.ACCESS_TOKEN_SECRET,
+        //     {'expiresIn': process.env.JWT_TOKEN_EXPIRATION}
+        // )
+        // const refreshToken = await jwt.sign(
+        //     {'id': userId},
+        //     process.env.REFRESH_TOKEN_SECRET,
+        // )
+    });
+}
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const password = req.body.password;
     if (email == null || password == null) {
-        sendError(res, 'Please provide valid email and password');
+        return sendError(res, 'Please provide valid email and password');
     }
     try {
         const user = yield user_model_1.default.findOne({ 'email': email });
         if (user == null) {
-            sendError(res, 'Incorrect user or password');
+            return sendError(res, 'Incorrect user or password');
         }
         const match = yield bcrypt_1.default.compare(password, user.password);
         if (!match)
-            sendError(res, "Incorrect user or password");
+            return sendError(res, "Incorrect user or password");
         const accessToken = yield jsonwebtoken_1.default.sign({ 'id': user._id }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
+        const refreshToken = yield jsonwebtoken_1.default.sign({ 'id': user._id }, process.env.REFRESH_TOKEN_SECRET);
+        if (user.refresh_tokens == null)
+            user.refresh_tokens = [refreshToken];
+        else
+            user.refresh_tokens.push(refreshToken);
+        yield user.save();
         return res.status(200).send({
-            'accessToken': accessToken
+            'accessToken': accessToken,
+            'refreshToken': refreshToken
         });
     }
     catch (err) {
-        sendError(res, "Failed checking user");
+        return sendError(res, "Failed checking user");
     }
 });
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.status(400).send({ 'error': "not implemented" });
+    const refreshToken = getTokenFromRequest(req);
+    if (refreshToken == null)
+        return sendError(res, 'Authentication missing');
+    try {
+        const user = yield jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const userObj = yield user_model_1.default.findById(user.id);
+        if (userObj == null)
+            return sendError(res, 'Failed validating token');
+        if (!userObj.refresh_tokens.includes(refreshToken)) {
+            userObj.refresh_tokens = [];
+            yield userObj.save();
+            return sendError(res, 'Failed validating token');
+        }
+        userObj.refresh_tokens.splice(userObj.refresh_tokens.indexOf(refreshToken), 1);
+        yield userObj.save();
+        res.status(200).send();
+    }
+    catch (err) {
+        return sendError(res, 'Failed validating token');
+    }
 });
-const authenticateMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+function getTokenFromRequest(req) {
     const authHeaders = req.headers['authorization'];
     if (authHeaders == null)
-        sendError(res, 'Authentication missing');
-    const token = authHeaders && authHeaders.split(' ')[1];
+        return null;
+    return authHeaders.split(' ')[1];
+}
+const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const refreshToken = getTokenFromRequest(req);
+    if (refreshToken == null)
+        return sendError(res, 'Authentication missing');
+    try {
+        const user = yield jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const userObj = yield user_model_1.default.findById(user.id);
+        if (userObj == null)
+            return sendError(res, 'Failed validating token');
+        if (!userObj.refresh_tokens.includes(refreshToken)) {
+            userObj.refresh_tokens = [];
+            yield userObj.save();
+            return sendError(res, 'Failed validating token');
+        }
+        const newAccessToken = yield jsonwebtoken_1.default.sign({ 'id': user.id }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
+        const newRefreshToken = yield jsonwebtoken_1.default.sign({ 'id': user.id }, process.env.REFRESH_TOKEN_SECRET);
+        userObj.refresh_tokens[userObj.refresh_tokens.indexOf(refreshToken)];
+        yield userObj.save();
+        return res.status(200).send({
+            'accessToken': newAccessToken,
+            'refreshToken': newRefreshToken
+        });
+    }
+    catch (err) {
+        return sendError(res, 'Failed validating token');
+    }
+});
+const authenticateMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = getTokenFromRequest(req);
     if (token == null)
-        sendError(res, 'Authentication missing');
+        return sendError(res, 'Authentication missing');
     try {
         const user = yield jsonwebtoken_1.default.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        //TODO: fix ts
-        //req.userId = user._id
+        req.body.userId = user.id;
         console.log("token user " + user);
         next();
     }
@@ -92,5 +163,5 @@ const authenticateMiddleware = (req, res, next) => __awaiter(void 0, void 0, voi
         return sendError(res, 'Failed validating token');
     }
 });
-module.exports = { login, register, logout, authenticateMiddleware };
+module.exports = { login, register, logout, authenticateMiddleware, refresh };
 //# sourceMappingURL=auth.js.map

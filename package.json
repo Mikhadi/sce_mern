@@ -8,7 +8,7 @@
     "devstart": "nodemon ./src/app.ts",
     "lint": "eslint . --ext .ts",
     "test": "tsc && jest --detectOpenHandles --forceExit ./dist/src/tests",
-    "authTest": "tsc && jest --detectOpenHandles --forceExit ./dist/src/tests/auth"
+    "testAuth": "tsc && jest --detectOpenHandles --forceExit ./dist/src/tests/auth"
   },
   "author": "Mikhail Diyachkov",
   "license": "ISC",
