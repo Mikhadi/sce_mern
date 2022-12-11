@@ -1,6 +1,16 @@
 import Post from '../models/post_models'
 import { Request, Response } from 'express'
 
+const getAllPostsEvent = async () => {
+    console.log("")
+    try{
+        const posts = await Post.find()
+        return {status : "OK", data: posts}
+    }
+    catch(err){
+        return {status : "FAIL", data: ""}
+    }
+}
 
 const getAllPosts = async(req: Request, res: Response) => {
     try{
@@ -57,4 +67,4 @@ const updatePost = async(req: Request, res: Response) => {
     }
 }
 
-export = {getAllPosts, addNewPost, getPostById, updatePost}
+export = {getAllPosts, addNewPost, getPostById, updatePost, getAllPostsEvent}
