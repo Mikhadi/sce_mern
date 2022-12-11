@@ -50,18 +50,12 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 function generateTokens(userId) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => {
-            return userId;
-        });
-        // const accessToken = await jwt.sign(
-        //     {'id': userId},
-        //     process.env.ACCESS_TOKEN_SECRET,
-        //     {'expiresIn': process.env.JWT_TOKEN_EXPIRATION}
-        // )
-        // const refreshToken = await jwt.sign(
-        //     {'id': userId},
-        //     process.env.REFRESH_TOKEN_SECRET,
-        // )
+        const accessToken = yield jsonwebtoken_1.default.sign({ 'id': userId }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
+        const refreshToken = yield jsonwebtoken_1.default.sign({ 'id': userId }, process.env.REFRESH_TOKEN_SECRET);
+        return {
+            accessToken: accessToken,
+            refreshToken: refreshToken
+        };
     });
 }
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
