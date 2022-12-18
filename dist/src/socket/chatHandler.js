@@ -8,23 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-const post_1 = __importDefault(require("../controllers/post"));
 module.exports = (io, socket) => {
-    const getAllPosts = () => __awaiter(void 0, void 0, void 0, function* () {
-        const res = yield post_1.default.getAllPostsEvent();
-        socket.emit('post:get_all', res);
+    const sendMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+        const to = payload.to;
+        const message = payload.message;
+        const from = socket.data.user;
+        io.to(to).emit("chat:message", { 'to': to, 'from': from, 'message': message });
     });
-    const getPostById = (payload) => {
-        socket.emit('echo:echo', payload);
-    };
-    const addNewPost = (payload) => {
-        socket.emit('echo:echo', payload);
-    };
-    socket.on("post:get_all", getAllPosts);
-    socket.on("post:get_by_id", getPostById);
-    socket.on("post:add_new", addNewPost);
+    socket.on("chat:send_message", sendMessage);
 };
-//# sourceMappingURL=postHandler.js.map
+//# sourceMappingURL=chatHandler.js.map

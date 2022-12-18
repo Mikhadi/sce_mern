@@ -19,60 +19,73 @@ const supertest_1 = __importDefault(require("supertest"));
 const post_models_1 = __importDefault(require("../models/post_models"));
 const user_model_1 = __importDefault(require("../models/user_model"));
 const userEmail = "user1@gmail.com";
+const userEmail2 = "user2@gmail.com";
 const userPassword = "12345";
-let accessToken = '';
-let clientSocket;
-function clientSocketConnect() {
+let client1;
+let client2;
+function clientSocketConnect(clientSocket) {
     return new Promise((resolve) => {
         clientSocket.on("connect", () => {
             resolve("1");
         });
     });
 }
+const connectUser = (userEmail, userPassword) => __awaiter(void 0, void 0, void 0, function* () {
+    const response1 = yield (0, supertest_1.default)(app_1.default).post('/auth/register').send({
+        "email": userEmail,
+        "password": userPassword
+    });
+    const userId = response1.body._id;
+    const response = yield (0, supertest_1.default)(app_1.default).post('/auth/login').send({
+        "email": userEmail,
+        "password": userPassword
+    });
+    const token = response.body.accessToken;
+    const socket = (0, socket_io_client_1.default)('http://localhost:' + process.env.PORT, {
+        auth: {
+            token: 'barrer ' + token
+        }
+    });
+    yield clientSocketConnect(socket);
+    const client = { "socket": socket, 'access_token': token, 'id': userId };
+    return client;
+});
 describe("my awesome project", () => {
     beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
         yield post_models_1.default.deleteMany();
         yield user_model_1.default.deleteMany();
-        yield (0, supertest_1.default)(app_1.default).post('/auth/register').send({
-            "email": userEmail,
-            "password": userPassword
-        });
-        const response = yield (0, supertest_1.default)(app_1.default).post('/auth/login').send({
-            "email": userEmail,
-            "password": userPassword
-        });
-        accessToken = response.body.accessToken;
-        clientSocket = (0, socket_io_client_1.default)('http://localhost:' + process.env.PORT, {
-            auth: {
-                token: 'barrer ' + accessToken
-            }
-        });
-        yield clientSocketConnect();
+        client1 = yield connectUser(userEmail, userPassword);
+        client2 = yield connectUser(userEmail2, userPassword);
     }));
     afterAll(() => {
         app_1.default.close();
-        clientSocket.close();
+        client1.socket.close();
+        client2.socket.close();
         mongoose_1.default.connection.close();
     });
     test("should work", (done) => {
-        clientSocket.removeAllListeners();
-        clientSocket.onAny((eventName, arg) => {
-            console.log("on any");
-            expect(eventName).toBe('echo:echo');
+        client1.socket.once("echo:echo_res", (arg) => {
             expect(arg.msg).toBe('hello');
             done();
         });
-        clientSocket.emit("echo:echo", { 'msg': 'hello' });
+        client1.socket.emit("echo:echo", { 'msg': 'hello' });
     });
     test("Post get all test", (done) => {
-        clientSocket.removeAllListeners();
-        clientSocket.onAny((eventName, arg) => {
-            console.log("on any");
-            expect(eventName).toBe('post:get_all');
+        client1.socket.once("post:get_all", (arg) => {
             expect(arg.status).toBe('OK');
             done();
         });
-        clientSocket.emit("post:get_all");
+        client1.socket.emit("post:get_all");
+    });
+    test("Test chat messages", (done) => {
+        const msg = "Hi.... Test123";
+        client2.socket.once("chat:message", (args) => {
+            expect(args.to).toBe(client2.id);
+            expect(args.message).toBe(msg);
+            expect(args.from).toBe(client1.id);
+            done();
+        });
+        client1.socket.emit("chat:send_message", { "to": client2.id, "message": msg });
     });
 });
 //# sourceMappingURL=socket.test.js.map

@@ -2,15 +2,15 @@ import { Server, Socket } from 'socket.io'
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import postController from '../controllers/post'
 
-export = (io:any, socket:any) => {
+export = (io:Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>, 
+    socket:Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>) => {
     const getAllPosts = async () => {
         const res = await postController.getAllPostsEvent()
         socket.emit('post:get_all', res)
     }
 
     const getPostById = (payload) => {
-        const res = postController.getAllPostsEvent()
-        socket.emit('echo:echo', res)
+        socket.emit('echo:echo', payload)
     }
 
     const addNewPost = (payload) => {
