@@ -11,6 +11,10 @@ const userEmail = "user1@gmail.com"
 const userEmail2 = "user2@gmail.com"
 const userPassword = "12345"
 
+const message = "This is test socket message"
+const updatedMessage = "This is updated message"
+let postId = null
+
 type Client = {
     'socket': Socket<DefaultEventsMap, DefaultEventsMap>, 
     'access_token': string,
@@ -72,12 +76,49 @@ describe("my awesome project", () => {
         client1.socket.emit("echo:echo", {'msg':'hello'})
     });
 
-    test("Post get all test", (done) => {
-        client1.socket.once("post:get_all", (arg) => {
-            expect(arg.status).toBe('OK');
+    test("postAdd", (done) => {
+        client1.socket.once('post:add.response', (arg) => {
+            expect(arg.message).toEqual(message)
+            expect(arg.sender).toEqual(client1.id)
+            postId = arg._id
             done();
         });
-        client1.socket.emit("post:get_all")
+        client1.socket.emit('post:add', {'message':message})
+    })
+
+    test("Post get all test", (done) => {
+        client1.socket.once("post:get.response", (arg) => {
+            expect(arg[0].message).toEqual(message);
+            done();
+        });
+        client1.socket.emit("post:get")
+    });
+
+    test("Post get by sender", (done) => {
+        client2.socket.once("post:get:sender.response", (arg) => {
+            expect(arg[0].message).toEqual(message);
+            expect(arg[0].sender).toEqual(client1.id);
+            done();
+        });
+        client2.socket.emit("post:get:sender", {'sender': client1.id})
+    });
+
+    test("Post get by ID", (done) => {
+        client2.socket.once("post:get:id.response", (arg) => {
+            expect(arg.message).toEqual(message);
+            expect(arg.sender).toEqual(client1.id);
+            done();
+        });
+        client2.socket.emit("post:get:id", {'id': postId})
+    });
+
+    test("Update post", (done) => {
+        client1.socket.once("post:put.response", (arg) => {
+            expect(arg.message).toEqual(updatedMessage);
+            expect(arg.sender).toEqual(client1.id);
+            done();
+        });
+        client1.socket.emit("post:put", {'id': postId, 'message': updatedMessage})
     });
 
     test("Test chat messages", (done) => {

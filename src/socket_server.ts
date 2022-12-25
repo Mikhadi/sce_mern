@@ -4,7 +4,6 @@ import echoHandler from './socket/echoHandler'
 import postHandler from './socket/postHandler'
 import chatHandler from './socket/chatHandler'
 import jwt from "jsonwebtoken"
-import user_model from "./models/user_model";
 
 export = (server: http.Server) => {
     const io = new Server(server);

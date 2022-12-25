@@ -31,6 +31,8 @@ import express from 'express'
 const router = express.Router()
 import post from '../controllers/post'
 import auth from '../controllers/auth'
+import NewRequest from '../common/Request'
+import { Request, Response } from 'express'
 
 /**
 * @swagger
@@ -57,7 +59,17 @@ import auth from '../controllers/auth'
 
 
 //All posts page route
-router.get('/', auth.authenticateMiddleware, post.getAllPosts)
+router.get('/', auth.authenticateMiddleware, async (req: Request, res: Response) => {
+    try{
+        const response = await post.getAllPosts(NewRequest.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err){
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        })
+    }
+})
 
 /**
 * @swagger
@@ -86,12 +98,42 @@ router.get('/', auth.authenticateMiddleware, post.getAllPosts)
 */
 
 //Post by id
-router.get('/:id', post.getPostById)
+router.get('/:id', auth.authenticateMiddleware, async(req:Request, res:Response) => {
+    try{
+        const response = await post.getPostById(NewRequest.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err){
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        })
+    }
+})
 
 //New post page route
-router.post('/', post.addNewPost)
+router.post('/', auth.authenticateMiddleware, async (req: Request, res: Response) => {
+    try{
+        const response = await post.addNewPost(NewRequest.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err){
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        })
+    }
+})
 
 //Update post route
-router.put('/:id', post.updatePost)
+router.put('/:id', auth.authenticateMiddleware, async (req: Request, res: Response) => {
+    try{
+        const response = await post.updatePost(NewRequest.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err){
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        })
+    }
+})
 
 export = router
