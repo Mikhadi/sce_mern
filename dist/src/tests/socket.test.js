@@ -137,7 +137,6 @@ describe("my awesome project", () => {
     });
     test("Test get messages", (done) => {
         client1.socket.once("chat:get_messages.response", (args) => {
-            console.log("args.length" + args.length);
             expect(args.length).toBe(2);
             done();
         });
