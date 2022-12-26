@@ -18,6 +18,7 @@ const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const supertest_1 = __importDefault(require("supertest"));
 const post_models_1 = __importDefault(require("../models/post_models"));
 const user_model_1 = __importDefault(require("../models/user_model"));
+const chat_model_1 = __importDefault(require("../models/chat_model"));
 const userEmail = "user1@gmail.com";
 const userEmail2 = "user2@gmail.com";
 const userPassword = "12345";
@@ -57,6 +58,7 @@ describe("my awesome project", () => {
     beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
         yield post_models_1.default.deleteMany();
         yield user_model_1.default.deleteMany();
+        yield chat_model_1.default.deleteMany();
         client1 = yield connectUser(userEmail, userPassword);
         client2 = yield connectUser(userEmail2, userPassword);
     }));
@@ -113,7 +115,7 @@ describe("my awesome project", () => {
         });
         client1.socket.emit("post:put", { 'id': postId, 'message': updatedMessage });
     });
-    test("Test chat messages", (done) => {
+    test("Test chat messages from 1 client", (done) => {
         const msg = "Hi.... Test123";
         client2.socket.once("chat:message", (args) => {
             expect(args.to).toBe(client2.id);
@@ -122,6 +124,24 @@ describe("my awesome project", () => {
             done();
         });
         client1.socket.emit("chat:send_message", { "to": client2.id, "message": msg });
+    });
+    test("Test chat messages from 2 client", (done) => {
+        const msg = "Hi.... Test123";
+        client1.socket.once("chat:message", (args) => {
+            expect(args.to).toBe(client1.id);
+            expect(args.message).toBe(msg);
+            expect(args.from).toBe(client2.id);
+            done();
+        });
+        client2.socket.emit("chat:send_message", { "to": client1.id, "message": msg });
+    });
+    test("Test get messages", (done) => {
+        client1.socket.once("chat:get_messages.response", (args) => {
+            console.log("args.length" + args.length);
+            expect(args.length).toBe(2);
+            done();
+        });
+        client1.socket.emit("chat:get_messages", { "id": client2.id });
     });
 });
 //# sourceMappingURL=socket.test.js.map

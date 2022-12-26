@@ -1,5 +1,4 @@
 import Post from '../models/post_models'
-import { Request, Response } from 'express'
 import NewRequest from '../common/Request' 
 import NewResponse from '../common/Response'
 import NewError from '../common/Error'

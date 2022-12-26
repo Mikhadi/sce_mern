@@ -6,6 +6,7 @@ import { DefaultEventsMap } from "@socket.io/component-emitter";
 import request from 'supertest'
 import Post from '../models/post_models'
 import User from '../models/user_model'
+import Chat from '../models/chat_model'
 
 const userEmail = "user1@gmail.com"
 const userEmail2 = "user2@gmail.com"
@@ -57,6 +58,7 @@ describe("my awesome project", () => {
     beforeAll(async () => {
         await Post.deleteMany()
         await User.deleteMany()
+        await Chat.deleteMany()
         client1 = await connectUser(userEmail, userPassword)
         client2 = await connectUser(userEmail2, userPassword)
     });
@@ -121,7 +123,7 @@ describe("my awesome project", () => {
         client1.socket.emit("post:put", {'id': postId, 'message': updatedMessage})
     });
 
-    test("Test chat messages", (done) => {
+    test("Test chat messages from 1 client", (done) => {
         const msg = "Hi.... Test123"
         client2.socket.once("chat:message", (args)=>{
             expect(args.to).toBe(client2.id)
@@ -130,6 +132,25 @@ describe("my awesome project", () => {
             done()
         })
         client1.socket.emit("chat:send_message", {"to": client2.id, "message": msg})
-
     })
+
+    test("Test chat messages from 2 client", (done) => {
+        const msg = "Hi.... Test123"
+        client1.socket.once("chat:message", (args)=>{
+            expect(args.to).toBe(client1.id)
+            expect(args.message).toBe(msg)
+            expect(args.from).toBe(client2.id)
+            done()
+        })
+        client2.socket.emit("chat:send_message", {"to": client1.id, "message": msg})
+    })
+
+    test("Test get messages", (done) => {
+        client1.socket.once("chat:get_messages.response", (args)=>{
+            expect(args.length).toBe(2)
+            done()
+        })
+        client1.socket.emit("chat:get_messages", {"id": client2.id})
+    })
+
 });
