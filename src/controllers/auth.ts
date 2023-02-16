@@ -106,7 +106,7 @@ const logout = async(req: Request, res: Response) => {
         const userObj = await User.findById(user.id)
         if(userObj == null) return sendError(res, 'Failed validating token')
 
-       if  (!userObj.refresh_tokens.includes(refreshToken)){
+       if (!userObj.refresh_tokens.includes(refreshToken)){
         userObj.refresh_tokens = []
         await userObj.save()
         return sendError(res, 'Failed validating token')
