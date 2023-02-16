@@ -20,13 +20,19 @@ function sendError(res, error) {
     });
 }
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const name = req.body.name;
     const email = req.body.email;
+    const username = req.body.username;
     const password = req.body.password;
-    if (email == null || password == null) {
+    if (email == null || password == null || username == null || name == null) {
         return sendError(res, 'Please provide valid email and password');
     }
     try {
-        const user = yield user_model_1.default.findOne({ 'email': email });
+        let user = yield user_model_1.default.findOne({ 'email': email });
+        if (user != null) {
+            return sendError(res, 'User already registered');
+        }
+        user = yield user_model_1.default.findOne({ 'username': username });
         if (user != null) {
             return sendError(res, 'User already registered');
         }
@@ -39,7 +45,9 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const encryptedPwd = yield bcrypt_1.default.hash(password, salt);
         let newUser = new user_model_1.default({
             'email': email,
-            'password': encryptedPwd
+            'password': encryptedPwd,
+            'username': username,
+            'name': name,
         });
         newUser = yield newUser.save();
         res.status(200).send(newUser);
@@ -50,38 +58,35 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 function generateTokens(userId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const accessToken = yield jsonwebtoken_1.default.sign({ 'id': userId }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
-        const refreshToken = yield jsonwebtoken_1.default.sign({ 'id': userId }, process.env.REFRESH_TOKEN_SECRET);
-        return {
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        };
+        const accessToken = jsonwebtoken_1.default.sign({ 'id': userId }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
+        const refreshToken = jsonwebtoken_1.default.sign({ 'id': userId }, process.env.REFRESH_TOKEN_SECRET);
+        return { 'accessToken': accessToken, 'refreshToken': refreshToken };
     });
 }
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
+    const username = req.body.username;
     const password = req.body.password;
-    if (email == null || password == null) {
+    if (username == null || password == null) {
         return sendError(res, 'Please provide valid email and password');
     }
     try {
-        const user = yield user_model_1.default.findOne({ 'email': email });
+        const user = yield user_model_1.default.findOne({ 'username': username });
         if (user == null) {
             return sendError(res, 'Incorrect user or password');
         }
         const match = yield bcrypt_1.default.compare(password, user.password);
         if (!match)
             return sendError(res, "Incorrect user or password");
-        const accessToken = yield jsonwebtoken_1.default.sign({ 'id': user._id }, process.env.ACCESS_TOKEN_SECRET, { 'expiresIn': process.env.JWT_TOKEN_EXPIRATION });
-        const refreshToken = yield jsonwebtoken_1.default.sign({ 'id': user._id }, process.env.REFRESH_TOKEN_SECRET);
+        const tokens = yield generateTokens(user._id.toString());
         if (user.refresh_tokens == null)
-            user.refresh_tokens = [refreshToken];
+            user.refresh_tokens = [tokens.refreshToken];
         else
-            user.refresh_tokens.push(refreshToken);
+            user.refresh_tokens.push(tokens.refreshToken);
         yield user.save();
         return res.status(200).send({
-            'accessToken': accessToken,
-            'refreshToken': refreshToken
+            'accessToken': tokens.accessToken,
+            'refreshToken': tokens.refreshToken,
+            'id': user._id
         });
     }
     catch (err) {

@@ -11,15 +11,22 @@ function sendError(res: Response, error: string){
 }
 
 const register = async(req: Request, res: Response) => {
+    const name = req.body.name
     const email = req.body.email
+    const username = req.body.username
     const password = req.body.password
 
-    if(email == null || password == null){
+    if(email == null || password == null || username == null || name == null){
         return sendError(res, 'Please provide valid email and password')
     }
 
     try{
-        const user = await User.findOne({'email': email})
+        let user = await User.findOne({'email': email})
+        if (user != null){
+            return sendError(res, 'User already registered')
+        }
+
+        user = await User.findOne({'username': username})
         if (user != null){
             return sendError(res, 'User already registered')
         }
@@ -32,7 +39,9 @@ const register = async(req: Request, res: Response) => {
         const encryptedPwd = await bcrypt.hash(password, salt)
         let newUser = new User({
             'email': email,
-            'password': encryptedPwd
+            'password': encryptedPwd,
+            'username': username,
+            'name': name,
         })
         newUser = await newUser.save()
         res.status(200).send(newUser)
@@ -41,37 +50,30 @@ const register = async(req: Request, res: Response) => {
     }
 }
 
-type Tokens = {
-    accessToken: string,
-    refreshToken: string
-}
-
-async function generateTokens(userId: string): Promise<Tokens>{
-    const accessToken = await jwt.sign(
+async function generateTokens(userId:string){
+    const accessToken = jwt.sign(
         {'id': userId},
         process.env.ACCESS_TOKEN_SECRET,
-        {'expiresIn': process.env.JWT_TOKEN_EXPIRATION}
+        {'expiresIn':process.env.JWT_TOKEN_EXPIRATION}
     )
-    const refreshToken = await jwt.sign(
+    const refreshToken = jwt.sign(
         {'id': userId},
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_SECRET
     )
-    return {
-        accessToken: accessToken,
-        refreshToken: refreshToken
-    }
+
+    return {'accessToken':accessToken, 'refreshToken':refreshToken}
 }
 
 const login = async(req: Request, res: Response) => {
-    const email = req.body.email
+    const username = req.body.username
     const password = req.body.password
 
-    if(email == null || password == null){
+    if(username == null || password == null){
         return sendError(res, 'Please provide valid email and password')
     }
 
     try{
-        const user = await User.findOne({'email': email})
+        const user = await User.findOne({'username': username})
         if (user == null){
             return sendError(res, 'Incorrect user or password')
         }
@@ -79,23 +81,16 @@ const login = async(req: Request, res: Response) => {
         const match = await bcrypt.compare(password, user.password)
         if(!match) return sendError(res, "Incorrect user or password")
 
-        const accessToken = await jwt.sign(
-            {'id': user._id},
-            process.env.ACCESS_TOKEN_SECRET,
-            {'expiresIn': process.env.JWT_TOKEN_EXPIRATION}
-        )
-        const refreshToken = await jwt.sign(
-            {'id': user._id},
-            process.env.REFRESH_TOKEN_SECRET,
-        )
+        const tokens = await generateTokens(user._id.toString())
 
-        if (user.refresh_tokens == null) user.refresh_tokens = [refreshToken]
-        else user.refresh_tokens.push(refreshToken)
+        if (user.refresh_tokens == null) user.refresh_tokens = [tokens.refreshToken]
+        else user.refresh_tokens.push(tokens.refreshToken)
         await user.save()
 
         return res.status(200).send({
-            'accessToken': accessToken,
-            'refreshToken': refreshToken
+            'accessToken': tokens.accessToken,
+            'refreshToken': tokens.refreshToken,
+            'id': user._id
         })
     }catch(err){
         return sendError(res, "Failed checking user")
