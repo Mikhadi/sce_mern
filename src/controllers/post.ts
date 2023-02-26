@@ -30,7 +30,8 @@ const getPostById = async(req: NewRequest) => {
 
 const deletePostById = async(req: NewRequest) => {
     try{
-        const result = await Post.deleteOne(req.postId)
+        const postId = req.body.params.id
+        const result = await Post.deleteOne( { "_id" : postId } )
         if(result.deletedCount == 1){
             return new NewResponse(null, req.userId, null)
         }else{

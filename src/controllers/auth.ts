@@ -190,7 +190,6 @@ const authenticateMiddleware = async (
       process.env.ACCESS_TOKEN_SECRET
     )) as JwtPayload;
     req.body.userId = user.id;
-    console.log("token user " + user);
     next();
   } catch (err) {
     return sendError(res, "Failed validating token");
