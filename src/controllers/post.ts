@@ -28,10 +28,25 @@ const getPostById = async(req: NewRequest) => {
     }
 }
 
+const deletePostById = async(req: NewRequest) => {
+    try{
+        const result = await Post.deleteOne(req.postId)
+        if(result.deletedCount == 1){
+            return new NewResponse(null, req.userId, null)
+        }else{
+            return new NewResponse(null, req.userId, new NewError(400, "Post doesn't exist"))
+        }
+    }
+    catch(err){
+        return new NewResponse(null, req.userId, new NewError(400, err.message))
+    }
+}
+
 const addNewPost = async(req: NewRequest) => {
     const post = new Post({
         message: req.body.message,
-        sender: req.userId
+        image: req.body.image,
+        sender: req.body.userId,
     })
     
     try{
@@ -56,4 +71,4 @@ const updatePost = async(req: NewRequest) => {
     }
 }
 
-export = {addNewPost, getPostById, updatePost, getAllPosts}
+export = {addNewPost, getPostById, updatePost, getAllPosts, deletePostById}

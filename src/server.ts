@@ -15,14 +15,20 @@ const db = mongoose.connection
 db.on('error', error=>{console.error(error)})
 db.once('open', ()=>{console.log('Conncected to MongoDB')})
 
-app.use(express.static('public'))
+app.use('/public', express.static('public'))
+app.use('/uploads', express.static('uploads'))
 
 import postRouter from './routes/post_route'
-
 app.use('/post', postRouter)
 
 import authRouter from './routes/auth_route'
 app.use('/auth', authRouter)
+
+import userRouter from './routes/user_route'
+app.use('/user', userRouter)
+
+import fileRouter from './routes/file_route'
+app.use('/file', fileRouter)
 
 import swaggerUI from "swagger-ui-express"
 import swaggerJsDoc from "swagger-jsdoc"

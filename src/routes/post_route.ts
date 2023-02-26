@@ -110,6 +110,19 @@ router.get('/:id', auth.authenticateMiddleware, async(req:Request, res:Response)
     }
 })
 
+//Delete post by id
+router.post('/delete', auth.authenticateMiddleware, async(req:Request, res:Response) => {
+    try{
+        const response = await post.deletePostById(NewRequest.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err){
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        })
+    }
+})
+
 //New post page route
 router.post('/', auth.authenticateMiddleware, async (req: Request, res: Response) => {
     try{
