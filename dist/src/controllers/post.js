@@ -15,6 +15,7 @@ const post_models_1 = __importDefault(require("../models/post_models"));
 const Response_1 = __importDefault(require("../common/Response"));
 const Error_1 = __importDefault(require("../common/Error"));
 const getAllPosts = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Get all posts");
     try {
         let posts = {};
         if (req.senderId == null) {
@@ -30,6 +31,7 @@ const getAllPosts = (req) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const getPostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Get post by id");
     try {
         const posts = yield post_models_1.default.findById(req.postId);
         return new Response_1.default(posts, req.userId, null);
@@ -38,10 +40,26 @@ const getPostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
         return new Response_1.default(null, req.userId, new Error_1.default(400, err.message));
     }
 });
+const deletePostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const postId = req.body.params.id;
+        const result = yield post_models_1.default.deleteOne({ "_id": postId });
+        if (result.deletedCount == 1) {
+            return new Response_1.default(null, req.userId, null);
+        }
+        else {
+            return new Response_1.default(null, req.userId, new Error_1.default(400, "Post doesn't exist"));
+        }
+    }
+    catch (err) {
+        return new Response_1.default(null, req.userId, new Error_1.default(400, err.message));
+    }
+});
 const addNewPost = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const post = new post_models_1.default({
         message: req.body.message,
-        sender: req.userId
+        image: req.body.image,
+        sender: req.body.userId,
     });
     try {
         const newPost = yield post.save();
@@ -52,9 +70,10 @@ const addNewPost = (req) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const updatePost = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req);
     try {
         const filter = { _id: req.postId };
-        const update = { message: req.body.message };
+        const update = { message: req.body.message, image: req.body.image };
         const post = yield post_models_1.default.findOneAndUpdate(filter, update, { new: true });
         return new Response_1.default(post, req.userId, null);
     }
@@ -62,5 +81,5 @@ const updatePost = (req) => __awaiter(void 0, void 0, void 0, function* () {
         return new Response_1.default(null, req.userId, new Error_1.default(400, err.message));
     }
 });
-module.exports = { addNewPost, getPostById, updatePost, getAllPosts };
+module.exports = { addNewPost, getPostById, updatePost, getAllPosts, deletePostById };
 //# sourceMappingURL=post.js.map

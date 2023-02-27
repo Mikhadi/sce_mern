@@ -62,7 +62,7 @@ const addNewPost = async(req: NewRequest) => {
 const updatePost = async(req: NewRequest) => {
     try{
         const filter = { _id: req.postId };
-        const update = { message: req.body.message };
+        const update = { message: req.body.message, image: req.body.image };
 
         const post = await Post.findOneAndUpdate(filter, update, {new: true});
         return new NewResponse(post, req.userId, null)

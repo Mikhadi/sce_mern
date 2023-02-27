@@ -115,6 +115,19 @@ router.get('/:id', auth_1.default.authenticateMiddleware, (req, res) => __awaite
         });
     }
 }));
+//Delete post by id
+router.post('/delete', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield post_1.default.deletePostById(Request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            'status': 'Fail',
+            'message': err.message
+        });
+    }
+}));
 //New post page route
 router.post('/', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

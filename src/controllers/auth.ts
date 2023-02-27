@@ -47,7 +47,6 @@ const register = async (req: Request, res: Response) => {
     newUser = await newUser.save();
     res.status(200).send(newUser);
   } catch (err) {
-    console.log("catched error " + err)
     return sendError(res, "Failed registration");
   }
 };
@@ -108,9 +107,7 @@ const logout = async (req: Request, res: Response) => {
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     )) as JwtPayload;
-    console.log(user)
     const userObj = await User.findById(user.id);
-    console.log(userObj)
     if (userObj == null) return sendError(res, "Failed validating token");
 
     if (!userObj.refresh_tokens.includes(refreshToken)) {

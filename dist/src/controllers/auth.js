@@ -161,7 +161,6 @@ const authenticateMiddleware = (req, res, next) => __awaiter(void 0, void 0, voi
     try {
         const user = (yield jsonwebtoken_1.default.verify(token, process.env.ACCESS_TOKEN_SECRET));
         req.body.userId = user.id;
-        console.log("token user " + user);
         next();
     }
     catch (err) {
