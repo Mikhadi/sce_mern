@@ -23,13 +23,17 @@ export = (server: http.Server) => {
     });
 
     io.on('connection', async (socket) => {
-        console.log('a user connected ' + socket.id);
+        console.log('User connected ' + socket.id);
         echoHandler(io, socket)
         postHandler(io, socket)
         chatHandler(io, socket)
 
-        const userId = socket.data.user
-        await socket.join(userId)
+        //const userId = socket.data.user
+        await socket.join("Global")
+        socket.on('disconnect', () => {
+            console.log("User disconnected" + socket.id)
+            socket.leave("Global")
+        })
     });
 
     return io

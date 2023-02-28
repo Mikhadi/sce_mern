@@ -6,23 +6,21 @@ export = (io:Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>,
     socket:Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap>) => {
     
         const sendMessage = async (payload) => {
+            const time = Date.now()
             const message = new Chat({
                 to: payload.to,
                 message: payload.message,
                 from: socket.data.user,
-                time: Date.now()
+                time: time
             })
 
-            await message.save()
+            const msg = await message.save()
 
-            io.to(message.to).emit("chat:message", {'to': message.to, 'from': message.from, 'message': message.message})
+            io.to(message.to).emit("chat:message", {'to': message.to, 'from': message.from, 'message': message.message, 'time': msg.time, "_id": msg._id})
         }
 
         const getMessages = async (payload) => {
-            const messagesFrom = await Chat.find({"from": payload.id, "to": socket.data.user})
-            const messagesTo = await Chat.find({"to": payload.id, "from": socket.data.user})
-            const messages = messagesFrom.concat(messagesTo)
-
+            const messages = await Chat.find({"to": payload.to})
             socket.emit("chat:get_messages.response", messages)
         }
 
