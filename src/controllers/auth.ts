@@ -14,10 +14,10 @@ const register = async (req: Request, res: Response) => {
   const email = req.body.email;
   const username = req.body.username;
   const password = req.body.password;
-  const avatar_url = req.body.avatar_url;
+  let avatar_url = req.body.avatar_url;
 
-  if (email == null || password == null || username == null || name == null) {
-    return sendError(res, "Please provide valid email and password");
+  if (avatar_url == ""){
+    avatar_url = process.env.BASE_URL + "uploads/default_avatar.png"
   }
 
   try {

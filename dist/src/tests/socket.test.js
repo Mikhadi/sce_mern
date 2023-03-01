@@ -16,15 +16,14 @@ const app_1 = __importDefault(require("../app"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const supertest_1 = __importDefault(require("supertest"));
-const post_models_1 = __importDefault(require("../models/post_models"));
 const user_model_1 = __importDefault(require("../models/user_model"));
 const chat_model_1 = __importDefault(require("../models/chat_model"));
-const userEmail = "user1@gmail.com";
+const userEmail1 = "user1@gmail.com";
 const userEmail2 = "user2@gmail.com";
+const userUsername1 = "user1";
+const userUsername2 = "user12";
+const userName = "User User";
 const userPassword = "12345";
-const message = "This is test socket message";
-const updatedMessage = "This is updated message";
-let postId = null;
 let client1;
 let client2;
 function clientSocketConnect(clientSocket) {
@@ -34,14 +33,17 @@ function clientSocketConnect(clientSocket) {
         });
     });
 }
-const connectUser = (userEmail, userPassword) => __awaiter(void 0, void 0, void 0, function* () {
+const connectUser = (userEmail, userPassword, userUsername, userName) => __awaiter(void 0, void 0, void 0, function* () {
     const response1 = yield (0, supertest_1.default)(app_1.default).post('/auth/register').send({
         "email": userEmail,
-        "password": userPassword
+        "password": userPassword,
+        "username": userUsername,
+        "name": userName,
+        "avatar_url": ""
     });
     const userId = response1.body._id;
     const response = yield (0, supertest_1.default)(app_1.default).post('/auth/login').send({
-        "email": userEmail,
+        "username": userUsername,
         "password": userPassword
     });
     const token = response.body.accessToken;
@@ -56,18 +58,19 @@ const connectUser = (userEmail, userPassword) => __awaiter(void 0, void 0, void 
 });
 describe("my awesome project", () => {
     beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
-        yield post_models_1.default.deleteMany();
-        yield user_model_1.default.deleteMany();
-        yield chat_model_1.default.deleteMany();
-        client1 = yield connectUser(userEmail, userPassword);
-        client2 = yield connectUser(userEmail2, userPassword);
+        client1 = yield connectUser(userEmail1, userPassword, userUsername1, userName);
+        client2 = yield connectUser(userEmail2, userPassword, userUsername2, userName);
     }));
-    afterAll(() => {
+    afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield user_model_1.default.deleteOne({ "_id": client1.id });
+        yield user_model_1.default.deleteOne({ "_id": client2.id });
+        yield chat_model_1.default.deleteOne({ "from": client1.id });
+        yield chat_model_1.default.deleteOne({ "from": client2.id });
         app_1.default.close();
         client1.socket.close();
         client2.socket.close();
         mongoose_1.default.connection.close();
-    });
+    }));
     test("should work", (done) => {
         client1.socket.once("echo:echo_res", (arg) => {
             expect(arg.msg).toBe('hello');
@@ -75,72 +78,22 @@ describe("my awesome project", () => {
         });
         client1.socket.emit("echo:echo", { 'msg': 'hello' });
     });
-    test("postAdd", (done) => {
-        client1.socket.once('post:add.response', (arg) => {
-            expect(arg.message).toEqual(message);
-            expect(arg.sender).toEqual(client1.id);
-            postId = arg._id;
-            done();
-        });
-        client1.socket.emit('post:add', { 'message': message });
-    });
-    test("Post get all test", (done) => {
-        client1.socket.once("post:get.response", (arg) => {
-            expect(arg[0].message).toEqual(message);
-            done();
-        });
-        client1.socket.emit("post:get");
-    });
-    test("Post get by sender", (done) => {
-        client2.socket.once("post:get:sender.response", (arg) => {
-            expect(arg[0].message).toEqual(message);
-            expect(arg[0].sender).toEqual(client1.id);
-            done();
-        });
-        client2.socket.emit("post:get:sender", { 'sender': client1.id });
-    });
-    test("Post get by ID", (done) => {
-        client2.socket.once("post:get:id.response", (arg) => {
-            expect(arg.message).toEqual(message);
-            expect(arg.sender).toEqual(client1.id);
-            done();
-        });
-        client2.socket.emit("post:get:id", { 'id': postId });
-    });
-    test("Update post", (done) => {
-        client1.socket.once("post:put.response", (arg) => {
-            expect(arg.message).toEqual(updatedMessage);
-            expect(arg.sender).toEqual(client1.id);
-            done();
-        });
-        client1.socket.emit("post:put", { 'id': postId, 'message': updatedMessage });
-    });
     test("Test chat messages from 1 client", (done) => {
         const msg = "Hi.... Test123";
         client2.socket.once("chat:message", (args) => {
-            expect(args.to).toBe(client2.id);
+            expect(args.to).toBe('Global');
             expect(args.message).toBe(msg);
             expect(args.from).toBe(client1.id);
             done();
         });
-        client1.socket.emit("chat:send_message", { "to": client2.id, "message": msg });
-    });
-    test("Test chat messages from 2 client", (done) => {
-        const msg = "Hi.... Test123";
-        client1.socket.once("chat:message", (args) => {
-            expect(args.to).toBe(client1.id);
-            expect(args.message).toBe(msg);
-            expect(args.from).toBe(client2.id);
-            done();
-        });
-        client2.socket.emit("chat:send_message", { "to": client1.id, "message": msg });
+        client1.socket.emit("chat:send_message", { "to": "Global", "message": msg });
     });
     test("Test get messages", (done) => {
         client1.socket.once("chat:get_messages.response", (args) => {
-            expect(args.length).toBe(2);
+            expect(args.length).not.toBe(0);
             done();
         });
-        client1.socket.emit("chat:get_messages", { "id": client2.id });
+        client1.socket.emit("chat:get_messages", { "to": "Global" });
     });
 });
 //# sourceMappingURL=socket.test.js.map

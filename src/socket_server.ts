@@ -31,7 +31,6 @@ export = (server: http.Server) => {
         //const userId = socket.data.user
         await socket.join("Global")
         socket.on('disconnect', () => {
-            console.log("User disconnected" + socket.id)
             socket.leave("Global")
         })
     });

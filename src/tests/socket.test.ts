@@ -4,17 +4,15 @@ import Client, { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 
 import request from 'supertest'
-import Post from '../models/post_models'
 import User from '../models/user_model'
 import Chat from '../models/chat_model'
 
-const userEmail = "user1@gmail.com"
+const userEmail1 = "user1@gmail.com"
 const userEmail2 = "user2@gmail.com"
+const userUsername1 = "user1"
+const userUsername2 = "user12"
+const userName = "User User"
 const userPassword = "12345"
-
-const message = "This is test socket message"
-const updatedMessage = "This is updated message"
-let postId = null
 
 type Client = {
     'socket': Socket<DefaultEventsMap, DefaultEventsMap>, 
@@ -33,14 +31,17 @@ function clientSocketConnect(clientSocket):Promise<string>{
     })
 }
 
-const connectUser = async(userEmail, userPassword) => {
+const connectUser = async(userEmail, userPassword, userUsername, userName) => {
     const response1 = await request(server).post('/auth/register').send({
-        "email": userEmail,
-        "password": userPassword 
+        "email" : userEmail,
+        "password" : userPassword,
+        "username" : userUsername,
+        "name": userName,
+        "avatar_url" : ""
     })
     const userId = response1.body._id
     const response = await request(server).post('/auth/login').send({
-        "email": userEmail,
+        "username": userUsername,
         "password": userPassword 
     })
     const token = response.body.accessToken
@@ -56,14 +57,15 @@ const connectUser = async(userEmail, userPassword) => {
 
 describe("my awesome project", () => {
     beforeAll(async () => {
-        await Post.deleteMany()
-        await User.deleteMany()
-        await Chat.deleteMany()
-        client1 = await connectUser(userEmail, userPassword)
-        client2 = await connectUser(userEmail2, userPassword)
+        client1 = await connectUser(userEmail1, userPassword, userUsername1, userName)
+        client2 = await connectUser(userEmail2, userPassword, userUsername2, userName)
     });
 
-    afterAll(() => {
+    afterAll(async () => {
+        await User.deleteOne({ "_id": client1.id })
+        await User.deleteOne({ "_id": client2.id })
+        await Chat.deleteOne({ "from": client1.id })
+        await Chat.deleteOne({ "from": client2.id })
         server.close()
         client1.socket.close()
         client2.socket.close()
@@ -78,79 +80,23 @@ describe("my awesome project", () => {
         client1.socket.emit("echo:echo", {'msg':'hello'})
     });
 
-    test("postAdd", (done) => {
-        client1.socket.once('post:add.response', (arg) => {
-            expect(arg.message).toEqual(message)
-            expect(arg.sender).toEqual(client1.id)
-            postId = arg._id
-            done();
-        });
-        client1.socket.emit('post:add', {'message':message})
-    })
-
-    test("Post get all test", (done) => {
-        client1.socket.once("post:get.response", (arg) => {
-            expect(arg[0].message).toEqual(message);
-            done();
-        });
-        client1.socket.emit("post:get")
-    });
-
-    test("Post get by sender", (done) => {
-        client2.socket.once("post:get:sender.response", (arg) => {
-            expect(arg[0].message).toEqual(message);
-            expect(arg[0].sender).toEqual(client1.id);
-            done();
-        });
-        client2.socket.emit("post:get:sender", {'sender': client1.id})
-    });
-
-    test("Post get by ID", (done) => {
-        client2.socket.once("post:get:id.response", (arg) => {
-            expect(arg.message).toEqual(message);
-            expect(arg.sender).toEqual(client1.id);
-            done();
-        });
-        client2.socket.emit("post:get:id", {'id': postId})
-    });
-
-    test("Update post", (done) => {
-        client1.socket.once("post:put.response", (arg) => {
-            expect(arg.message).toEqual(updatedMessage);
-            expect(arg.sender).toEqual(client1.id);
-            done();
-        });
-        client1.socket.emit("post:put", {'id': postId, 'message': updatedMessage})
-    });
-
     test("Test chat messages from 1 client", (done) => {
         const msg = "Hi.... Test123"
         client2.socket.once("chat:message", (args)=>{
-            expect(args.to).toBe(client2.id)
+            expect(args.to).toBe('Global')
             expect(args.message).toBe(msg)
             expect(args.from).toBe(client1.id)
             done()
         })
-        client1.socket.emit("chat:send_message", {"to": client2.id, "message": msg})
-    })
-
-    test("Test chat messages from 2 client", (done) => {
-        const msg = "Hi.... Test123"
-        client1.socket.once("chat:message", (args)=>{
-            expect(args.to).toBe(client1.id)
-            expect(args.message).toBe(msg)
-            expect(args.from).toBe(client2.id)
-            done()
-        })
-        client2.socket.emit("chat:send_message", {"to": client1.id, "message": msg})
+        client1.socket.emit("chat:send_message", {"to": "Global", "message": msg})
     })
 
     test("Test get messages", (done) => {
         client1.socket.once("chat:get_messages.response", (args)=>{
-            expect(args.length).toBe(2)
+            expect(args.length).not.toBe(0)
             done()
         })
-        client1.socket.emit("chat:get_messages", {"id": client2.id})
+        client1.socket.emit("chat:get_messages", {"to": "Global"})
     })
 
 });

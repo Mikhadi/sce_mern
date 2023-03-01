@@ -15,7 +15,6 @@ const post_models_1 = __importDefault(require("../models/post_models"));
 const Response_1 = __importDefault(require("../common/Response"));
 const Error_1 = __importDefault(require("../common/Error"));
 const getAllPosts = (req) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Get all posts");
     try {
         let posts = {};
         if (req.senderId == null) {
@@ -31,7 +30,6 @@ const getAllPosts = (req) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const getPostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Get post by id");
     try {
         const posts = yield post_models_1.default.findById(req.postId);
         return new Response_1.default(posts, req.userId, null);
@@ -70,7 +68,6 @@ const addNewPost = (req) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const updatePost = (req) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req);
     try {
         const filter = { _id: req.postId };
         const update = { message: req.body.message, image: req.body.image };

@@ -29,6 +29,10 @@ const auth_1 = __importDefault(require("../controllers/auth"));
 *           required:
 *               - email
 *               - password
+*               - name
+*               - username
+*           parametrs:
+*               - avatar_url
 *           properties:
 *               email:
 *                   type: string
@@ -36,9 +40,21 @@ const auth_1 = __importDefault(require("../controllers/auth"));
 *               password:
 *                   type: string
 *                   description: The user password
+*               username:
+*                   type: string
+*                   description: The user username
+*               name:
+*                   type: string
+*                   description: The user full name
+*               avatar_url:
+*                   type: string
+*                   description: The url to user's avatar
 *           example:
 *               email: 'bob@gmail.com'
 *               password: '123456'
+*               username: 'bob'
+*               name: 'Bob Bob'
+*               avatar_url: 'localhost:3000/uploads/123.jpg'
 */
 /**
 * @swagger
@@ -63,10 +79,9 @@ const auth_1 = __importDefault(require("../controllers/auth"));
 *               description: Registration error
 *               content:
 *                   application/json:
-*                       schema:
-*                           err:
-*                               type: string
-*                               description: error description
+*                       err:
+*                           type: string
+*                           description: error description
 */
 router.post('/register', auth_1.default.register);
 /**
@@ -80,7 +95,15 @@ router.post('/register', auth_1.default.register);
 *           content:
 *               application/json:
 *                   schema:
-*                       $ref: '#/components/schemas/User'
+*                       username:
+*                               type: string
+*                               description: Username
+*                       password:
+*                               type: string
+*                               description: User password
+*                   example:
+*                       username: 'user'
+*                       password: '123456'
 *       responses:
 *           200:
 *               description: Login success
@@ -93,9 +116,23 @@ router.post('/register', auth_1.default.register);
 *                           refreshToken:
 *                               type: string
 *                               description: The JWT refresh token
+*                           id:
+*                               type: string
+*                               description: Connected user id
 *                       example:
 *                           accessToken: '123cd123x1xx1'
 *                           refreshToken: '134r2134cr1x3c'
+*                           id: '123456'
+*           400:
+*               description: Login failed
+*               content:
+*                   application/json:
+*                       schema:
+*                           err:
+*                               type: string
+*                               description: Error description
+*                       example:
+*                           err: 'Failed validating token'
 */
 router.post('/login', auth_1.default.login);
 /**
@@ -134,6 +171,8 @@ router.get('/refresh', auth_1.default.refresh);
 *       responses:
 *           200:
 *               description: Logout and invalidate access token
+*           400:
+*               description: Logout Failed
 */
 router.get('/logout', auth_1.default.logout);
 module.exports = router;

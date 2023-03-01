@@ -34,12 +34,15 @@ module.exports = (server) => {
         });
     }));
     io.on('connection', (socket) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log('a user connected ' + socket.id);
+        console.log('User connected ' + socket.id);
         (0, echoHandler_1.default)(io, socket);
         (0, postHandler_1.default)(io, socket);
         (0, chatHandler_1.default)(io, socket);
-        const userId = socket.data.user;
-        yield socket.join(userId);
+        //const userId = socket.data.user
+        yield socket.join("Global");
+        socket.on('disconnect', () => {
+            socket.leave("Global");
+        });
     }));
     return io;
 };

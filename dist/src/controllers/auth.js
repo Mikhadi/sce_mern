@@ -24,9 +24,9 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const username = req.body.username;
     const password = req.body.password;
-    const avatar_url = req.body.avatar_url;
-    if (email == null || password == null || username == null || name == null) {
-        return sendError(res, "Please provide valid email and password");
+    let avatar_url = req.body.avatar_url;
+    if (avatar_url == "") {
+        avatar_url = process.env.BASE_URL + "uploads/default_avatar.png";
     }
     try {
         let user = yield user_model_1.default.findOne({ email: email });
@@ -55,7 +55,6 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(200).send(newUser);
     }
     catch (err) {
-        console.log("catched error " + err);
         return sendError(res, "Failed registration");
     }
 });
@@ -102,9 +101,7 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return sendError(res, "Authentication missing");
     try {
         const user = (yield jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET));
-        console.log(user);
         const userObj = yield user_model_1.default.findById(user.id);
-        console.log(userObj);
         if (userObj == null)
             return sendError(res, "Failed validating token");
         if (!userObj.refresh_tokens.includes(refreshToken)) {

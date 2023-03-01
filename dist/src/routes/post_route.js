@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 *           type: object
 *           required:
 *               - message
+*               - image
 *               - sender
 *           properties:
 *               message:
@@ -33,9 +34,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 *               sender:
 *                   type: string
 *                   description: The sender name
+*               image:
+*                   type: string
+*                   description: Image url
 *           example:
 *               message: 'This is new post'
 *               sender: '12345'
+*               image: 'localhost:3000/uploads/image.jpg'
 */
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
@@ -46,7 +51,7 @@ const Request_1 = __importDefault(require("../common/Request"));
 * @swagger
 * /post:
 *   get:
-*       summary: Get post by id
+*       summary: Get posts by sender
 *       tags: [Post]
 *       security:
 *           - bearerAuth: []
@@ -115,6 +120,32 @@ router.get('/:id', auth_1.default.authenticateMiddleware, (req, res) => __awaite
         });
     }
 }));
+/**
+* @swagger
+* /post/delete/:
+*   get:
+*       summary: Delete post by id
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       parameters:
+*         - in: path
+*           name: id
+*           required: true
+*           schema:
+*               type: string
+*               description: DElete posts by id
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
 //Delete post by id
 router.post('/delete', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -128,6 +159,31 @@ router.post('/delete', auth_1.default.authenticateMiddleware, (req, res) => __aw
         });
     }
 }));
+/**
+* @swagger
+* /post:
+*   post:
+*       summary: Add post
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       requestBody:
+*           required: true
+*           content:
+*               application/json:
+*                   schema:
+*                       $ref: '#/components/schemas/Post'
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
 //New post page route
 router.post('/', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -141,6 +197,31 @@ router.post('/', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(
         });
     }
 }));
+/**
+* @swagger
+* /post:
+*   put:
+*       summary: Edit post
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       requestBody:
+*           required: true
+*           content:
+*               application/json:
+*                   schema:
+*                       $ref: '#/components/schemas/Post'
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
 //Update post route
 router.put('/:id', auth_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

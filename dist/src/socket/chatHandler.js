@@ -14,19 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 const chat_model_1 = __importDefault(require("../models/chat_model"));
 module.exports = (io, socket) => {
     const sendMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+        const time = Date.now();
         const message = new chat_model_1.default({
             to: payload.to,
             message: payload.message,
             from: socket.data.user,
-            time: Date.now()
+            time: time
         });
-        yield message.save();
-        io.to(message.to).emit("chat:message", { 'to': message.to, 'from': message.from, 'message': message.message });
+        const msg = yield message.save();
+        io.to(message.to).emit("chat:message", { 'to': message.to, 'from': message.from, 'message': message.message, 'time': msg.time, "_id": msg._id });
     });
     const getMessages = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-        const messagesFrom = yield chat_model_1.default.find({ "from": payload.id, "to": socket.data.user });
-        const messagesTo = yield chat_model_1.default.find({ "to": payload.id, "from": socket.data.user });
-        const messages = messagesFrom.concat(messagesTo);
+        const messages = yield chat_model_1.default.find({ "to": payload.to });
         socket.emit("chat:get_messages.response", messages);
     });
     socket.on("chat:send_message", sendMessage);

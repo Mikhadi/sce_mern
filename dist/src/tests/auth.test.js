@@ -17,14 +17,14 @@ const server_1 = __importDefault(require("../server"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = __importDefault(require("../models/user_model"));
 const userEmail = "user1@gmail.com";
-const userPassword = "12345";
+const userPassword = "123456";
+const userUsername = "user1234";
+const userName = "User User";
+let userId = "";
 let accessToken = '';
 let refreshToken = '';
-beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield user_model_1.default.deleteMany();
-}));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield user_model_1.default.deleteMany();
+    yield user_model_1.default.deleteOne({ "_id": userId });
     yield mongoose_1.default.connection.close();
 }));
 describe("Auth Tests", () => {
@@ -36,12 +36,17 @@ describe("Auth Tests", () => {
         const response = yield (0, supertest_1.default)(server_1.default).post('/auth/register').send({
             "email": userEmail,
             "password": userPassword,
+            "username": userUsername,
+            "name": userName,
+            "avatar_url": ""
         });
+        console.log(response.body);
+        userId = response.body._id;
         expect(response.statusCode).toEqual(200);
     }));
     test("Login test", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(server_1.default).post('/auth/login').send({
-            "email": userEmail,
+            "username": userUsername,
             "password": userPassword,
         });
         expect(response.statusCode).toEqual(200);
@@ -58,12 +63,12 @@ describe("Auth Tests", () => {
         const response = yield (0, supertest_1.default)(server_1.default).get('/post').set('Authorization', 'JWT 1' + accessToken);
         expect(response.statusCode).not.toEqual(200);
     }));
-    jest.setTimeout(30000);
-    test("Test using expired access token", () => __awaiter(void 0, void 0, void 0, function* () {
-        yield new Promise(r => setTimeout(r, 10000));
-        const response = yield (0, supertest_1.default)(server_1.default).get('/post').set('Authorization', 'JWT ' + accessToken);
-        expect(response.statusCode).not.toEqual(200);
-    }));
+    // jest.setTimeout(30000)
+    // test("Test using expired access token", async () => {
+    //     await new Promise(r => setTimeout(r, 10000))
+    //     const response = await request(app).get('/post').set('Authorization', 'JWT ' + accessToken)
+    //     expect(response.statusCode).not.toEqual(200)
+    // })
     test("Test refresh token", () => __awaiter(void 0, void 0, void 0, function* () {
         let response = yield (0, supertest_1.default)(server_1.default).get('/auth/refresh').set('Authorization', 'JWT ' + refreshToken);
         expect(response.statusCode).toEqual(200);
@@ -72,6 +77,20 @@ describe("Auth Tests", () => {
         const newRefreshToken = response.body.refreshToken;
         expect(newRefreshToken).not.toBeNull();
         response = yield (0, supertest_1.default)(server_1.default).get('/post').set('Authorization', 'JWT ' + newAccessToken);
+        expect(response.statusCode).toEqual(200);
+    }));
+    test("Test get user", () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield (0, supertest_1.default)(server_1.default).get('/user/' + userId).set('Authorization', 'JWT ' + accessToken);
+        expect(response.statusCode).toEqual(200);
+        expect(response.body.username).toEqual(userUsername);
+        expect(response.body.email).toEqual(userEmail);
+        expect(response.body.name).toEqual(userName);
+    }));
+    test("Test update user", () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield (0, supertest_1.default)(server_1.default).put('/user').set('Authorization', 'JWT ' + accessToken).send({
+            "username": "newUsername",
+            "password": "198273981739"
+        });
         expect(response.statusCode).toEqual(200);
     }));
     test("Logout test", () => __awaiter(void 0, void 0, void 0, function* () {

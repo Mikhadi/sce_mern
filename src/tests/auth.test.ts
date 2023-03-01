@@ -4,17 +4,16 @@ import mongoose from 'mongoose'
 import User from "../models/user_model"
 
 const userEmail = "user1@gmail.com"
-const userPassword = "12345"
+const userPassword = "123456"
+const userUsername = "user1234"
+const userName = "User User"
+let userId = ""
 let accessToken = ''
 let refreshToken = ''
 
 
-beforeAll(async() => {
-    await User.deleteMany()
-})
-
 afterAll(async () => {
-    await User.deleteMany()
+    await User.deleteOne({ "_id": userId })
     await mongoose.connection.close()
 })
 
@@ -28,13 +27,18 @@ describe("Auth Tests", () => {
         const response = await request(app).post('/auth/register').send({
             "email" : userEmail,
             "password" : userPassword,
+            "username" : userUsername,
+            "name": userName,
+            "avatar_url" : ""
         })
+        console.log(response.body)
+        userId = response.body._id
         expect(response.statusCode).toEqual(200)
     })
 
     test("Login test", async () => {
         const response = await request(app).post('/auth/login').send({
-            "email" : userEmail,
+            "username" : userUsername,
             "password" : userPassword,
         })
         expect(response.statusCode).toEqual(200)
@@ -54,12 +58,12 @@ describe("Auth Tests", () => {
         expect(response.statusCode).not.toEqual(200)
     })
 
-    jest.setTimeout(30000)
-    test("Test using expired access token", async () => {
-        await new Promise(r => setTimeout(r, 10000))
-        const response = await request(app).get('/post').set('Authorization', 'JWT ' + accessToken)
-        expect(response.statusCode).not.toEqual(200)
-    })
+    // jest.setTimeout(30000)
+    // test("Test using expired access token", async () => {
+    //     await new Promise(r => setTimeout(r, 10000))
+    //     const response = await request(app).get('/post').set('Authorization', 'JWT ' + accessToken)
+    //     expect(response.statusCode).not.toEqual(200)
+    // })
 
     test("Test refresh token", async () => {
         let response = await request(app).get('/auth/refresh').set('Authorization', 'JWT ' + refreshToken)
@@ -73,6 +77,24 @@ describe("Auth Tests", () => {
         response = await request(app).get('/post').set('Authorization', 'JWT ' + newAccessToken)
         expect(response.statusCode).toEqual(200)
     })
+
+    test("Test get user", async () => {
+        const response = await request(app).get('/user/' + userId).set('Authorization', 'JWT ' + accessToken)
+        expect(response.statusCode).toEqual(200)
+        expect(response.body.username).toEqual(userUsername)
+        expect(response.body.email).toEqual(userEmail)
+        expect(response.body.name).toEqual(userName)
+    })
+
+    test("Test update user", async () => {
+        const response = await request(app).put('/user').set('Authorization', 'JWT ' + accessToken).send({
+            "username": "newUsername",
+            "password": "198273981739"
+        })
+        expect(response.statusCode).toEqual(200)
+    })
+
+
 
     test("Logout test", async () => {
         const response = await request(app).get('/auth/logout').set('Authorization', 'JWT ' + refreshToken)

@@ -13,6 +13,7 @@
 *           type: object
 *           required:
 *               - message
+*               - image
 *               - sender
 *           properties:
 *               message:
@@ -21,9 +22,13 @@
 *               sender:
 *                   type: string
 *                   description: The sender name
+*               image:
+*                   type: string
+*                   description: Image url
 *           example:
 *               message: 'This is new post'
 *               sender: '12345'
+*               image: 'localhost:3000/uploads/image.jpg'
 */
 
 
@@ -38,7 +43,7 @@ import { Request, Response } from 'express'
 * @swagger
 * /post:
 *   get:
-*       summary: Get post by id
+*       summary: Get posts by sender
 *       tags: [Post]
 *       security:
 *           - bearerAuth: []
@@ -110,6 +115,34 @@ router.get('/:id', auth.authenticateMiddleware, async(req:Request, res:Response)
     }
 })
 
+/**
+* @swagger
+* /post/delete/:
+*   get:
+*       summary: Delete post by id
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       parameters:
+*         - in: path
+*           name: id
+*           required: true
+*           schema:
+*               type: string
+*               description: DElete posts by id
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
+
+
 //Delete post by id
 router.post('/delete', auth.authenticateMiddleware, async(req:Request, res:Response) => {
     try{
@@ -123,6 +156,32 @@ router.post('/delete', auth.authenticateMiddleware, async(req:Request, res:Respo
     }
 })
 
+/**
+* @swagger
+* /post:
+*   post:
+*       summary: Add post
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       requestBody:
+*           required: true
+*           content:
+*               application/json:
+*                   schema:
+*                       $ref: '#/components/schemas/Post'
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
+
 //New post page route
 router.post('/', auth.authenticateMiddleware, async (req: Request, res: Response) => {
     try{
@@ -135,6 +194,32 @@ router.post('/', auth.authenticateMiddleware, async (req: Request, res: Response
         })
     }
 })
+
+/**
+* @swagger
+* /post:
+*   put:
+*       summary: Edit post
+*       tags: [Post]
+*       security:
+*           - bearerAuth: []
+*       requestBody:
+*           required: true
+*           content:
+*               application/json:
+*                   schema:
+*                       $ref: '#/components/schemas/Post'
+*       responses:
+*           200:
+*               description: Success
+*           400:
+*               description: Error
+*               content:
+*                   application/json:
+*                       err:
+*                           type: string
+*                           description: error description
+*/
 
 //Update post route
 router.put('/:id', auth.authenticateMiddleware, async (req: Request, res: Response) => {
