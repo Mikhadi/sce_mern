@@ -135,6 +135,7 @@ function getTokenFromRequest(req: Request): string {
 }
 
 const refresh = async (req: Request, res: Response) => {
+  console.log("Refresh token" + req.body.userId)
   const refreshToken = getTokenFromRequest(req);
   if (refreshToken == null) return sendError(res, "Authentication missing");
   try {
@@ -162,7 +163,7 @@ const refresh = async (req: Request, res: Response) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    userObj.refresh_tokens[userObj.refresh_tokens.indexOf(refreshToken)];
+    userObj.refresh_tokens[userObj.refresh_tokens.indexOf(refreshToken)] = newRefreshToken;
     await userObj.save();
 
     return res.status(200).send({
@@ -189,7 +190,7 @@ const authenticateMiddleware = async (
     req.body.userId = user.id;
     next();
   } catch (err) {
-    return sendError(res, "Failed validating token");
+    return sendError(res, "Access token expired");
   }
 };
 

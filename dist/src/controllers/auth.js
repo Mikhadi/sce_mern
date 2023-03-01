@@ -161,7 +161,7 @@ const authenticateMiddleware = (req, res, next) => __awaiter(void 0, void 0, voi
         next();
     }
     catch (err) {
-        return sendError(res, "Failed validating token");
+        return sendError(res, "Access token expired");
     }
 });
 module.exports = { login, register, logout, authenticateMiddleware, refresh };
